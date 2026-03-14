@@ -118,8 +118,8 @@ class ModelBase:
                  small_first_shard: bool = False, hparams: dict[str, Any] | None = None, remote_hf_model_id: str | None = None,
                  disable_mistral_community_chat_template: bool = False,
                  sentence_transformers_dense_modules: bool = False,
-                 fuse_gate_up_exps: bool = False):
-                 sentence_transformers_dense_modules: bool = False, target_model_dir: Path | None = None):
+                 fuse_gate_up_exps: bool = False,
+                 target_model_dir: Path | None = None):
         if type(self) is ModelBase or \
                 type(self) is TextModel or \
                 type(self) is MmprojModel:

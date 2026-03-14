@@ -163,10 +163,9 @@ llama_context::llama_context(
     cparams.op_offload = params.op_offload;
     cparams.kv_unified = params.kv_unified;
 
-    // initialized later
     cparams.eagle3_extract_enabled = false;
 
-    // intialized later
+    // initialized later
     cparams.pipeline_parallel = false;
 
     {
