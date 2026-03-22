@@ -1,0 +1,65 @@
+name: Rebase on Upstream Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: 'Upstream llama.cpp release tag (e.g. b8475)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/ggml-org/llama.cpp.git
+          git fetch upstream tag ${{ inputs.upstream_tag }} --no-tags
+          git fetch upstream refs/pull/18641/head:pr-18641
+          git fetch upstream refs/pull/18039/head:pr-18039
+
+      - name: Create rebase branch from upstream tag
+        run: |
+          git checkout -b rebase-${{ inputs.upstream_tag }} ${{ inputs.upstream_tag }}
+
+      - name: Merge PR #18641 (LFM2.5 audio)
+        run: |
+          git merge pr-18641 --no-edit -m "Merge PR #18641 (LFM2.5 audio) into rebase-${{ inputs.upstream_tag }}" || {
+            echo "::warning::Merge conflicts detected for PR #18641. Manual resolution required."
+            exit 1
+          }
+
+      - name: Merge PR #18039 (Eagle-3 speculative decoding)
+        run: |
+          git merge pr-18039 --no-edit -m "Merge PR #18039 (Eagle-3) into rebase-${{ inputs.upstream_tag }}" || {
+            echo "::warning::Merge conflicts detected for PR #18039. Manual resolution required."
+            exit 1
+          }
+
+      - name: Update main branch
+        run: |
+          git branch -f main rebase-${{ inputs.upstream_tag }}
+          git checkout main
+          git push origin main --force
+
+      - name: Create and push tag
+        run: |
+          TAG="${{ inputs.upstream_tag }}-openclaw.1"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Tagged as $TAG"
