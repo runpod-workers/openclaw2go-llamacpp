@@ -36,7 +36,7 @@ env:
 
 jobs:
   check-upstream:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       new_tag: ${{ steps.check.outputs.new_tag }}
       should_rebase: ${{ steps.check.outputs.should_rebase }}
@@ -81,7 +81,7 @@ jobs:
   rebase:
     needs: check-upstream
     if: needs.check-upstream.outputs.should_rebase == 'true'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout fork
         uses: actions/checkout@v4
