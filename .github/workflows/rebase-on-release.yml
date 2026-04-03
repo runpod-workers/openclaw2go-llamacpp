@@ -90,7 +90,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
-      workflows: write
+      pull-requests: write
     steps:
       - name: Checkout fork
         uses: actions/checkout@v4
@@ -158,6 +158,15 @@ jobs:
             echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           fi
 
+      - name: Strip upstream workflows and restore ours
+        if: steps.rebase.outputs.has_conflicts == 'false'
+        run: |
+          # GITHUB_TOKEN can't push workflow file changes, so replace
+          # upstream's workflows with our own (only rebase-on-release.yml)
+          git rm -rf .github/workflows/ 2>/dev/null || true
+          git checkout origin/master -- .github/workflows/
+          git commit -m "chore: restore fork workflows (strip upstream CI)" --allow-empty
+
       - name: Create release (clean rebase)
         if: steps.rebase.outputs.has_conflicts == 'false'
         run: |
@@ -170,12 +179,19 @@ jobs:
           git tag "$OUR_TAG"
           git push origin "$OUR_TAG"
 
-          # Update main branch
-          git checkout main
+          # Update master branch
+          git checkout master
           git merge "$BRANCH" --no-edit
-          git push origin main
+          git push origin master
 
           echo "Released: $OUR_TAG"
+
+      - name: Strip upstream workflows (conflicts path)
+        if: steps.rebase.outputs.has_conflicts == 'true'
+        run: |
+          git rm -rf .github/workflows/ 2>/dev/null || true
+          git checkout origin/master -- .github/workflows/
+          git commit -m "chore: restore fork workflows (strip upstream CI)" --allow-empty
 
       - name: Create PR (conflicts)
         if: steps.rebase.outputs.has_conflicts == 'true'
@@ -198,7 +214,7 @@ jobs:
           After merging, tag as `${NEW_TAG}-openclaw.1`.
           EOF
           )" \
-            --base main \
+            --base master \
             --head "$BRANCH" || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
