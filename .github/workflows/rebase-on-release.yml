@@ -88,6 +88,9 @@ jobs:
     needs: check-upstream
     if: needs.check-upstream.outputs.should_rebase == 'true'
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      contents: write
+      workflows: write
     steps:
       - name: Checkout fork
         uses: actions/checkout@v4
