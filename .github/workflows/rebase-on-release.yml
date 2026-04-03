@@ -28,11 +28,12 @@ on:
 env:
   UPSTREAM_REPO: ggml-org/llama.cpp
   # Cherry-picked PRs (in order of application)
-  # NOTE: PR #19460 (GLM-5 DSA) was merged upstream — no longer needed here
-  CHERRY_PICKS: |
-    18641
-    12794
-    18039
+  # All cherry-picks dropped — audio moved to Python media server, no fork patches needed.
+  # Dropped: PR #19460 (GLM-5 DSA) — merged upstream
+  # Dropped: PR #18641 (LFM2.5 audio) — replaced by Python TTS/STT servers
+  # Dropped: PR #12794 (OuteTTS 1.0) — build was disabled, API stale
+  # Dropped: PR #18039 (Eagle-3 spec decode) — no model uses it
+  CHERRY_PICKS: ""
 
 jobs:
   check-upstream:
