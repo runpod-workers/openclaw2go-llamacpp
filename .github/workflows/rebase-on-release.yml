@@ -61,13 +61,18 @@ jobs:
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git 2>/dev/null || true
           git fetch upstream --tags
 
-          # Get latest upstream tag
-          LATEST_TAG=$(git tag -l 'b*' --sort=-version:refname | head -1)
+          # Get latest upstream tag (pipe to head causes SIGPIPE with set -e, so use variable)
+          LATEST_TAG=$(git tag -l 'b*' --sort=-version:refname | head -1 || true)
           echo "Latest upstream tag: $LATEST_TAG"
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "ERROR: No upstream b* tags found"
+            exit 1
+          fi
 
           # Check if we already have this tag rebased
           OUR_TAG="${LATEST_TAG}-openclaw.1"
-          if git tag -l "$OUR_TAG" | grep -q "$OUR_TAG"; then
+          if git tag -l "$OUR_TAG" | grep -q "$OUR_TAG" 2>/dev/null; then
             if [ "${{ github.event.inputs.force }}" != "true" ]; then
               echo "Already rebased onto $LATEST_TAG (tag $OUR_TAG exists)"
               echo "should_rebase=false" >> $GITHUB_OUTPUT
@@ -98,7 +103,8 @@ jobs:
         run: |
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git 2>/dev/null || true
           git fetch upstream --tags
-          git fetch upstream
+          # Only fetch the specific tag ref, not all branches (repo is huge)
+          git fetch upstream "refs/tags/${{ needs.check-upstream.outputs.new_tag }}:refs/tags/${{ needs.check-upstream.outputs.new_tag }}"
 
       - name: Attempt rebase
         id: rebase
