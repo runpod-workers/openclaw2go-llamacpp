@@ -102,7 +102,8 @@ jobs:
       - name: Setup upstream
         run: |
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git 2>/dev/null || true
-          git fetch upstream --tags
+          # Only fetch the specific tag (full fetch OOMs on the massive llama.cpp repo)
+          git fetch upstream tag "${{ needs.check-upstream.outputs.new_tag }}" --no-tags
           # Only fetch the specific tag ref, not all branches (repo is huge)
           git fetch upstream "refs/tags/${{ needs.check-upstream.outputs.new_tag }}:refs/tags/${{ needs.check-upstream.outputs.new_tag }}"
 
